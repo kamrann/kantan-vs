@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35731.43 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kantan-vs", "kantan-vs\kantan-vs.csproj", "{9D9AE53E-804A-40E0-9BB5-68AD5F8CC412}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9D9AE53E-804A-40E0-9BB5-68AD5F8CC412}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D9AE53E-804A-40E0-9BB5-68AD5F8CC412}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D9AE53E-804A-40E0-9BB5-68AD5F8CC412}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D9AE53E-804A-40E0-9BB5-68AD5F8CC412}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {995D9825-B32B-4B3D-834A-A39B0B5A13E4}
+	EndGlobalSection
+EndGlobal
