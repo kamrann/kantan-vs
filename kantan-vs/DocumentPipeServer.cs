@@ -19,10 +19,12 @@ namespace Kantan
         private const byte MessageDelimiter = (byte)'\n';
 
         private IDocumentTrackingConsumer _trackingService;
+        private OutputUtilsService _outputService;
 
-        public DocumentPipeServer(IDocumentTrackingConsumer trackingService)
+        public DocumentPipeServer(IDocumentTrackingConsumer trackingService, OutputUtilsService outputService)
         {
             _trackingService = trackingService;
+            _outputService = outputService;
         }
 
         private static async Task<T?> ReadMessageAsync<T>(NamedPipeServerStream pipe, CancellationToken cancellationToken)
@@ -52,7 +54,7 @@ namespace Kantan
             // Wait for a client to connect
             await pipeServer.WaitForConnectionAsync(cancellationToken);
 
-            Console.WriteLine("Client connected on thread[{0}].", threadId);
+            await _outputService.WriteToOutputWindowAsync(string.Format("Client connected on thread[{0}].", threadId), cancellationToken);
 
             AutoResetEvent documentUpdateEvent = new(false);
 
@@ -61,7 +63,7 @@ namespace Kantan
             // @todo: exit condition
             while (pipeServer.IsConnected)
             {
-                // @todo: is we also want to wait for messages from the client, use Task.WhenAny along with ReadMessageAsync
+                // @todo: if we also want to wait for messages from the client, use Task.WhenAny along with ReadMessageAsync
                 bool updatesPending = await documentUpdateEvent.ToTask(cancellationToken: cancellationToken);
                 if (updatesPending)
                 {
@@ -76,7 +78,7 @@ namespace Kantan
 
             _trackingService.UnregisterConsumer(trackingId);
 
-            Console.WriteLine("Connected closed on thread[{0}].", threadId);
+            await _outputService.WriteToOutputWindowAsync(string.Format("Connection closed on thread[{0}].", threadId), cancellationToken);
         }
     }
 }

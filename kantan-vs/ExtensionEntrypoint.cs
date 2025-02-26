@@ -16,9 +16,9 @@ internal class ExtensionEntrypoint : Extension
         Metadata = new(
                 id: "Kantan.a0704f0e-bb28-4be9-9edd-458c7e6766ac",
                 version: this.ExtensionAssemblyVersion,
-                publisherName: "Publisher name",
+                publisherName: "Tokamak",
                 displayName: "Kantan VS",
-                description: "Extension description"),
+                description: "VS extension for kantan development"),
     };
 
     protected override ResourceManager? ResourceManager => Strings.ResourceManager;
@@ -29,6 +29,7 @@ internal class ExtensionEntrypoint : Extension
         base.InitializeServices(serviceCollection);
 
         // You can configure dependency injection here by adding services to the serviceCollection.
+        serviceCollection.AddScoped<OutputUtilsService>();
         serviceCollection.AddScoped<DocumentTrackingService>();
     }
 }

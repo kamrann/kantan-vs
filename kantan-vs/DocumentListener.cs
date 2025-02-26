@@ -14,16 +14,15 @@ using Microsoft.VisualStudio.Extensibility.Editor;
 // note: the fact that we get updates relating to cursor/selection change, without any change to the content, also makes it feel like
 // it's not the correct solution.
 
-#pragma warning disable VSEXTPREVIEW_OUTPUTWINDOW // Type is for evaluation purposes only and is subject to change or removal in future updates.
 [VisualStudioContribution]
 internal class DocumentListener : ExtensionPart, ITextViewOpenClosedListener, ITextViewChangedListener
 {
 #pragma warning disable CA2213 // This is an extension scoped service.
     private readonly IDocumentTrackingProvider _trackingService;
+    private readonly OutputUtilsService _outputService;
 #pragma warning restore CA2213
     private DocumentPipeServer _pipeServer;
     private Task _noIdea;
-    private OutputWindow? outputWindow;
 
     public TextViewExtensionConfiguration TextViewExtensionConfiguration => new()
     {
@@ -33,15 +32,16 @@ internal class DocumentListener : ExtensionPart, ITextViewOpenClosedListener, IT
             ],
     };
 
-    public DocumentListener(Extension extension, VisualStudioExtensibility extensibility, DocumentTrackingService trackingService)
+    public DocumentListener(Extension extension, VisualStudioExtensibility extensibility, DocumentTrackingService trackingService, OutputUtilsService outputService)
         : base(extension, extensibility)
     {
         _trackingService = trackingService;
+        _outputService = outputService;
 
         // @todo: don't know where this should live, but for now since we're defining the tracking service as scoped, meaning
         // it's instanced per extension part, seems to make sense to create the pipe server here.
 
-        _pipeServer = new DocumentPipeServer(trackingService);
+        _pipeServer = new DocumentPipeServer(trackingService, outputService);
         _noIdea = _pipeServer.InstanceThreadAsync(CancellationToken.None); // @todo: cleanup of this member?
     }
 
@@ -63,7 +63,7 @@ internal class DocumentListener : ExtensionPart, ITextViewOpenClosedListener, IT
             _trackingService.NotifyDocumentOpened(uri, textView.Document);
         }
 
-        await WriteToOutputWindowAsync(string.Format("Opened: {0}", textView.Uri), cancellationToken);
+        await _outputService.WriteToOutputWindowAsync(string.Format("Opened: {0}", textView.Uri), cancellationToken);
     }
 
     public async Task TextViewClosedAsync(ITextViewSnapshot textView, CancellationToken cancellationToken)
@@ -79,7 +79,7 @@ internal class DocumentListener : ExtensionPart, ITextViewOpenClosedListener, IT
             _documentRefCounts[uri] = refCount - 1;
         }
 
-        await WriteToOutputWindowAsync(string.Format("Closed: {0}", textView.Uri), cancellationToken);
+        await _outputService.WriteToOutputWindowAsync(string.Format("Closed: {0}", textView.Uri), cancellationToken);
     }
 
     public async Task TextViewChangedAsync(TextViewChangedArgs args, CancellationToken cancellationToken)
@@ -91,19 +91,6 @@ internal class DocumentListener : ExtensionPart, ITextViewOpenClosedListener, IT
             _trackingService.NotifyDocumentUpdated(uri, args.Edits, args.AfterTextView.Document);
         }
 
-        await WriteToOutputWindowAsync(string.Format("Edited: {0} ({1})", args.AfterTextView.Uri, args.Edits.ToString()), cancellationToken);
-    }
-
-    // @todo: doesn't belong here
-    private async Task WriteToOutputWindowAsync(string message, CancellationToken cancellationToken)
-    {
-        string id = "KantanOutputWindowPane";
-        string displayNameResourceId = nameof(Strings.OutputPaneDisplayName);
-        this.outputWindow ??= await this.Extensibility.Views().Output.GetChannelAsync(
-            id,
-            displayNameResourceId,
-            cancellationToken);
-        await this.outputWindow.Writer.WriteLineAsync(message);
+        await _outputService.WriteToOutputWindowAsync(string.Format("Edited: {0} ({1})", args.AfterTextView.Uri, args.Edits.ToString()), cancellationToken);
     }
 }
-#pragma warning restore VSEXTPREVIEW_OUTPUTWINDOW // Type is for evaluation purposes only and is subject to change or removal in future updates.
