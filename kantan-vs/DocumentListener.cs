@@ -89,8 +89,8 @@ internal class DocumentListener : ExtensionPart, ITextViewOpenClosedListener, IT
         if (args.Edits.Count > 0) // ignore selection-only changes
         {
             _trackingService.NotifyDocumentUpdated(uri, args.Edits, args.AfterTextView.Document);
-        }
 
-        await _outputService.WriteToOutputWindowAsync(string.Format("Edited: {0} ({1})", args.AfterTextView.Uri, args.Edits.ToString()), cancellationToken);
+            await _outputService.WriteToOutputWindowAsync(string.Format("Edited: {0} ({1})", args.AfterTextView.Uri, args.Edits.ToString()), cancellationToken);
+        }
     }
 }

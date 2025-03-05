@@ -25,11 +25,18 @@ class OutputUtilsService : DisposableObject
     public async Task WriteToOutputWindowAsync(string message, CancellationToken cancellationToken)
     {
         string displayNameResourceId = nameof(Strings.OutputPaneDisplayName);
-        outputWindow ??= await extensibility.Views().Output.GetChannelAsync(
-            OutputPaneName,
-            displayNameResourceId,
-            cancellationToken);
-        await outputWindow.Writer.WriteLineAsync(message);
+        try
+        {
+            outputWindow ??= await extensibility.Views().Output.GetChannelAsync(
+                OutputPaneName,
+                displayNameResourceId,
+                cancellationToken);
+            await outputWindow.Writer.WriteLineAsync(message);
+        }
+        catch (StreamJsonRpc.RemoteInvocationException e)
+        {
+            // @todo: wtf is going on?
+        }
     }
 }
 #pragma warning restore VSEXTPREVIEW_OUTPUTWINDOW // Type is for evaluation purposes only and is subject to change or removal in future updates.
