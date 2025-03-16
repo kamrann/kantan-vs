@@ -50,16 +50,24 @@ namespace Kantan
 
         public async Task InstanceThreadAsync(CancellationToken cancellationToken)
         {
-            using NamedPipeServerStream pipeStream = new NamedPipeServerStream(PipeName, PipeDirection.InOut, MaxInstances, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
-
             int threadId = Thread.CurrentThread.ManagedThreadId;
 
             while (!cancellationToken.IsCancellationRequested)
             {
+                using NamedPipeServerStream pipeStream = new NamedPipeServerStream(PipeName, PipeDirection.InOut, MaxInstances, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+
                 await _outputService.WriteToOutputWindowAsync(string.Format("Waiting for connection from clients on thread[{0}].", threadId), cancellationToken);
 
                 // Wait for a client to connect
-                await pipeStream.WaitForConnectionAsync(cancellationToken);
+                try
+                {
+                    await pipeStream.WaitForConnectionAsync(cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    await _outputService.WriteToOutputWindowAsync(string.Format("Problem waiting for client to connect to pipe: {0}", e.Message), cancellationToken);
+                    break; // temp bail
+                }
 
                 await _outputService.WriteToOutputWindowAsync(string.Format("Client connected on thread[{0}].", threadId), cancellationToken);
 

@@ -1,12 +1,13 @@
 ﻿namespace Kantan;
 
-using System;
-using System.Diagnostics;
-using System.Security.Policy;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Documents;
 using Microsoft.VisualStudio.Extensibility.Editor;
+using System;
+using System.Diagnostics;
+using System.Security.Policy;
+using System.Threading;
+using System.Threading.Tasks;
 
 // @todo: feels weird that we want to track documents, but have to listen for text view events to get the changes needed.
 // unsure if this is a hole in the api, or if intentional attempt to support case of a document being opened multiple times 
@@ -43,6 +44,13 @@ internal class DocumentListener : ExtensionPart, ITextViewOpenClosedListener, IT
 
         _pipeServer = new DocumentPipeServer(trackingService, outputService);
         _noIdea = _pipeServer.InstanceThreadAsync(CancellationToken.None); // @todo: cleanup of this member?
+
+        _outputService.WriteToOutputWindowAsync("DocumentListener created - Pipe server initialized", CancellationToken.None);
+    }
+
+    ~DocumentListener()
+    {
+        _outputService.WriteToOutputWindowAsync("DocumentListener destroyed", CancellationToken.None);
     }
 
     private Dictionary<Uri, uint> _documentRefCounts = new();
@@ -73,6 +81,7 @@ internal class DocumentListener : ExtensionPart, ITextViewOpenClosedListener, IT
         if (refCount == 1)
         {
             _trackingService.NotifyDocumentClosed(uri);
+            _documentRefCounts.Remove(uri);
         }
         else
         {

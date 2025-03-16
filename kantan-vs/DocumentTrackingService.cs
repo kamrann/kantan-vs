@@ -65,13 +65,18 @@ namespace Kantan
         class TrackedDocument
         {
             List<DocumentEvent> _events = new();
-            ITextDocumentSnapshot _latest;
+            ITextDocumentSnapshot? _latest;
 
             internal TrackedDocument(SyncCounter sync, ITextDocumentSnapshot latest)
             {
+                Open(sync, latest);
+            }
+
+            public void Open(SyncCounter sync, ITextDocumentSnapshot latest)
+            {
                 _events.Add(new DocumentOpen(sync));
                 // Initial single edit to represent delta from empty document to the current state.
-                _events.Add(new DocumentEdit(sync, new [] {
+                _events.Add(new DocumentEdit(sync, new[] {
                     new TextModification(SimpleTextRange.Empty(0), latest.Text.CopyToString()), // @TODO: perhaps more efficient to just store the TextRange reference, and then convert directly from that to the JSON to be sent.
                 }));
                 _latest = latest;
@@ -86,6 +91,7 @@ namespace Kantan
             public void Close(SyncCounter sync)
             {
                 _events.Add(new DocumentClose(sync));
+                _latest = null;
             }
 
             public IReadOnlyList<DocumentEvent> GetEvents(SyncCounter consumerSync)
@@ -118,7 +124,14 @@ namespace Kantan
 
         void IDocumentTrackingProvider.NotifyDocumentOpened(Uri uri, ITextDocumentSnapshot snapshot)
         {
-            _documents.Add(uri, new TrackedDocument(_syncCounter++, snapshot));
+            if (_documents.ContainsKey(uri))
+            {
+                _documents[uri].Open(_syncCounter++, snapshot);
+            }
+            else
+            {
+                _documents.Add(uri, new TrackedDocument(_syncCounter++, snapshot));
+            }
 
             foreach (var (id, entry) in _consumers)
             {
@@ -136,6 +149,7 @@ namespace Kantan
             }
 
             // @todo: will need to remove from the map when all have synced to the close point, so within ConsumeUpdates most likely.
+            // note that potentially we can have a single document key that is opened, closed, then reopened all whilst remaining in the map due to non-synced clients.
             //_documents.Remove(uri);
         }
 
