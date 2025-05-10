@@ -30,6 +30,7 @@ internal class DocumentListener : ExtensionPart, ITextViewOpenClosedListener, IT
         AppliesTo =
             [
                 DocumentFilter.FromGlobPattern("**/*.decl", relativePath: false),
+                DocumentFilter.FromGlobPattern("**/*.dlg", relativePath: false),
             ],
     };
 
