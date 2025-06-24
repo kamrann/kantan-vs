@@ -29,8 +29,9 @@ internal class DocumentListener : ExtensionPart, ITextViewOpenClosedListener, IT
     {
         AppliesTo =
             [
-                DocumentFilter.FromGlobPattern("**/*.decl", relativePath: false),
-                DocumentFilter.FromGlobPattern("**/*.dlg", relativePath: false),
+                // @note: behaves weird if specify as multiple array elements - only the latter will get activated...
+                // @todo: better to use document types which we register.
+                DocumentFilter.FromGlobPattern("**/*.{decl,dlg}", relativePath: false),
             ],
     };
 
